@@ -12,6 +12,7 @@ from app.logging_utils import setup_logging
 from app.services.chat_service import ChatService
 import app.ui.app as ui_app_module
 
+# setup_logging(level="INFO", module_name=__name__)
 logger = logging.getLogger(__name__)
 
 DEFAULT_HOST = "127.0.0.1"
@@ -124,7 +125,7 @@ def _resolve_launch_options(settings_file: Path) -> dict[str, Any]:
         or server_cfg.get("port")
         or launch_cfg.get("port"),
         DEFAULT_PORT,
-        )
+    )
 
     share = _parse_bool(
         os.getenv("EBANK_SHARE", server_cfg.get("share", launch_cfg.get("share", DEFAULT_SHARE))),
@@ -186,8 +187,8 @@ def main() -> int:
     """
     # 先用环境变量初始化日志，保证配置加载阶段的异常也能输出
     log_level = os.getenv("APP_LOG_LEVEL", "INFO")
-    setup_logging(log_level)
-
+    setup_logging(log_level, module_name=__name__)
+    # setup_logging(level="INFO", module_name=__name__)
     try:
         settings = get_settings()
     except AppConfigError as exc:

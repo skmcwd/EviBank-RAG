@@ -10,6 +10,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from markdown_it.rules_core.normalize import NULL_RE
 from pydantic import ValidationError
 
 # 兼容直接执行：
@@ -559,7 +560,7 @@ def parse_args() -> argparse.Namespace:
         description="合并 Excel/PPT/DOCX 解析结果为统一知识库 kb.jsonl。"
     )
     parser.add_argument(
-        "--input",
+        "--input", "--inputs",  # 兼容两种输入
         nargs="+",
         required=True,
         type=Path,
@@ -590,9 +591,10 @@ def main() -> int:
     命令行主入口。
     """
     args = parse_args()
-    setup_logging(args.log_level)
-
+    setup_logging(args.log_level, module_name=__name__)
+    # 这里直接读取 args.input 即可，无需 if/else 判定
     input_files = [path.expanduser().resolve() for path in args.input]
+
     output_path = args.output.expanduser().resolve()
     stats_output = (
         args.stats_output.expanduser().resolve()

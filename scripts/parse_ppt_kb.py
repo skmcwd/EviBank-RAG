@@ -445,7 +445,7 @@ def main() -> int:
     命令行主入口。
     """
     args = parse_args()
-    setup_logging(args.log_level)
+    setup_logging(args.log_level, module_name=__name__)
 
     input_path: Path = args.input.expanduser().resolve()
     output_path: Path = args.output.expanduser().resolve()

@@ -35,7 +35,7 @@ ASCII_TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 CJK_SPAN_RE = re.compile(r"[\u4e00-\u9fff]+")
 
 DEFAULT_COLLECTION_NAME = "ebank_faq_kb"
-DEFAULT_BATCH_SIZE = 64
+DEFAULT_BATCH_SIZE = 8
 DEFAULT_PRIORITY_BY_SOURCE_TYPE: dict[str, float] = {
     "docx": 1.1,
     "excel": 1.0,
@@ -901,7 +901,7 @@ def main() -> int:
     命令行主入口。
     """
     args = parse_args()
-    setup_logging(args.log_level)
+    setup_logging(args.log_level, module_name=__name__)
 
     if args.batch_size <= 0:
         logger.error("--batch-size 必须大于 0。")
@@ -973,7 +973,7 @@ def main() -> int:
 
         embedder = EmbeddingClient(
             model=settings.models.embed_model,
-            batch_size=args.batch_size,
+            batch_size=min(args.batch_size, 10)
         )
 
         inserted_chunks = upsert_chunks_to_chroma(

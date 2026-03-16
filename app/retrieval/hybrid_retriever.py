@@ -12,7 +12,9 @@ from app.models import RetrievedChunk
 from app.retrieval.bm25_index import BM25Index, BM25IndexError, BM25SearchResult
 from app.retrieval.query_normalizer import QueryNormalizationResult, normalize_query
 from app.retrieval.vector_store import VectorQueryResult, VectorStore, VectorStoreError
+from app.logging_utils import setup_logging
 
+setup_logging(level="INFO", module_name=__name__)
 logger = logging.getLogger(__name__)
 
 WHITESPACE_RE = re.compile(r"\s+")
@@ -402,7 +404,7 @@ class HybridRetriever:
             candidate.full_text,
             candidate.source_file,
             " ".join(candidate.image_paths),
-            ]
+        ]
         return " | ".join(part for part in parts if self._normalize_text(part)).casefold()
 
     def _rerank_candidates(

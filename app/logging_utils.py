@@ -12,7 +12,6 @@ _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 _RUN_TIMESTAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 _ROOT_CONFIGURED = False
 
-
 """
 第一步：分析多文件日志记录的潜在冲突（逻辑推理）
 在 Python 的 logging 模块中，日志器（Logger）是树状的层级结构。
@@ -25,6 +24,7 @@ _ROOT_CONFIGURED = False
 状态锁（State Flag）：引入一个全局变量 _ROOT_CONFIGURED。根日志器（负责控制台输出和旧 Handler 清理）只在第一次调用时初始化，避免重复清理导致的文件句柄丢失。
 独立的分发机制：通过新增一个可选参数 module_name，让每个代码文件可以获取专属的文件日志器，互不干扰，但同时将信息向上传递给根日志器以在控制台显示。
 """
+
 
 def setup_logging(
         level: str = "INFO",
@@ -45,7 +45,20 @@ def setup_logging(
     log_level = getattr(logging, level_name, logging.INFO)
 
     # 1. 创建本次运行的专属日志文件夹
-    root_path = Path(project_root) if project_root else Path.cwd()
+    if project_root:
+        root_path = Path(project_root)
+    else:
+        # 核心修复：基于当前 logging_utils.py 的绝对物理路径，动态向上寻找项目根目录
+        current_file_dir = Path(__file__).resolve().parent
+        root_path = current_file_dir
+
+        # 向上遍历目录树，通过项目特征文件（锚点）来准确定位根目录
+        # 你的项目包含 scripts 和 data 文件夹，将其作为根目录的判断依据
+        for parent in [current_file_dir, *current_file_dir.parents]:
+            if (parent / "scripts").exists() or (parent / "requirements.txt").exists():
+                root_path = parent
+                break
+
     run_logs_dir = root_path / "logs" / _RUN_TIMESTAMP
     run_logs_dir.mkdir(parents=True, exist_ok=True)
 

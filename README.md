@@ -1,129 +1,599 @@
-# 基于RAG架构的企业网银智能问答机器人
-代码详细介绍: [链接](Intro.md)
+# 银证智答
+### 面向企业网银的证据增强检索生成系统
 
-## 一、 项目背景与建设目标
+#### EviBank-RAG: Evidence-Grounded Retrieval-Augmented QA System for Enterprise E-Banking
 
-为提升企业网银客户常见问题的解答效率与用户体验，本项目拟构建一个基于检索增强生成（RAG）架构的智能问答机器人Demo。 本方案采用**“轻量级本地检索 + 云端大模型推理 + 多模态结果渲染”**的技术架构。该架构完美轻量级的硬件环境，免去笨重的本地算力依赖，还能通过“文本+原图佐证”的方式，精准、直观地向用户展示网银操作指南与故障排查方法。
+> 一个面向**企业网银交易常见问题**场景的轻量级 RAG 问答机器人 Demo。  
+> 项目聚焦“**本地可运行、易于演示、证据可追溯、图文可展示**”的工程目标，适用于企业内部知识问答、业务 FAQ 辅助检索与会议演示场景。
+>
+> Built a lightweight evidence-grounded RAG system for enterprise e-banking FAQ, featuring multi-source knowledge ingestion, hybrid retrieval, source-aware reranking, and explainable answer generation with visual evidence presentation.
 
-## 二、 整体技术架构图景
-
-系统整体分为四个核心模块，确保数据流转的高效与安全：
-
-1. **数据中枢**：负责多源异构文档（Word、Excel、PPT）的解析、图文剥离与结构化映射。
-2. **检索中枢**：依托本地轻量化向量数据库与云端Embedding API，实现语义级的高精度匹配。
-3. **推理中枢**：接入行业领先的云端大模型API（如DeepSeek-V3或通义千问Max），负责逻辑整合与合规表达。
-4. **交互中枢**：基于现代化前端框架构建，实现流式文本输出与关联参考图片的精准渲染。
-
-## 三、 核心实施路线
-
-### 步骤一：多模态知识库的精细化重构
-
-知识库包含三种不同格式的文件，需进行定制化的清洗与结构化映射，核心策略是**“文本提取与图片元数据绑定”**：
-
-- **结构化QA数据，基于Excel文件《企业网银常见问题》**
-
-    - 提取约70条数据，利用Python (`pandas`) 将“功能大类”、“问题描述”与“解决方法”拼接为结构清晰的陈述句区块（Chunk）。
-
-      > [!NOTE]
-      >
-      > 格式示例： “关于【功能大类】的常见问题：【问题描述】。解决方法是：【解决方法】。”
-
-      设定元数据：`{"source": "Excel", "image_path": null}`。
-
-- **图文操作指南，基于PPT文件《企业网银问题带图》**
-
-    - 利用自动化脚本将不到30页的PPT逐页导出为高清图片（存入本地 `images/` 目录）。
-    - 借助 `python-pptx` 或轻量级云端OCR提取每页的文本信息。
-    - 建立强映射关系：`{"content": "提取文本", "metadata": {"source": "PPT", "image_path": "./images/slide_X.jpg"}}`。
-
-- **混合排版文档，基于Word文件《操作手册-如何网银代发工资》**
-
-    - 按照操作步骤或段落标题进行文本切分。手动或通过脚本将文档按“代发工资交易”、“代发工资结果查询”等小标题拆分为几个段落。
-    - 提取文档内嵌的关键指导截图，并与对应的步骤文本进行JSON格式的绑定，在对应的文本段落中加入元数据标签，例如 `{"text": "代发工资交易流程...", "image_path": "./images/word_pic1.png"}`。
-
-### 步骤二：轻量级向量数据库构建
-
-为确保系统在轻量级上的极速响应，放弃资源消耗型的本地Embedding模型部署，无需额外部署复杂的独立数据库服务。
-
-- **云端向量化：** 调用商用级Embedding API（如智谱 `embedding-3`），将第一步处理好的所有文本区块转化为高维语义向量。
-- **本地化持久存储：** 采用 `ChromaDB` 作为轻量级向量数据库。它无需安装独立的数据库服务，以SQLite文件形式纯本地运行。将生成的向量与包含图片路径的 `metadata` 完整入库。
-- **入库策略：** 将第一步整理好的所有文本（Excel的拼接文本、PPT的提取文本、Word的段落）通过BGE模型转化为向量并存入数据库，同时将对应的 `image_path` 作为元数据（Metadata）一并存入。
-
-### 步骤三：高精度防幻觉检索策略
-
-在金融网银场景下，系统必须保证“零编造、零幻觉”。
-
-- **模型推荐：** 接入 **DeepSeek-V3**、**Qwen-Max** 或 **GLM-4** 的API。这些模型在中文金融语境下的指令遵循能力极强，且API调用成本极低。
-- **语义召回：** 接收用户提问后，实时调用云端Embedding API将其向量化，并在ChromaDB中进行余弦相似度比对，召回最相关的Top-k知识块及其伴随的 `metadata`，k取5或3。
-- **置信度拦截-安全兜底机制：** 设定相似度安全阈值。若检索到的最高匹配度低于设定阈值，系统将在检索层直接阻断，输出标准话术，如：“知识库中暂无相关记录，请联系人工客服”，从根本上杜绝大模型的“幻觉”作答。
-
-### 步骤四：云端大模型接入与提示词工程
-
-- **算力卸载：** 通过REST API接入云端顶级大语言模型，充分利用云端集群算力，确保复杂推理的极速返回。
-
-- **提示词约束：** 采用严苛的指令模板，规范模型行为：
-
-  > [!TIP]
-  >
-  > “你是一位严谨的企业网银业务专家。请严格基于以下【参考资料】为用户提供客观、准确的解答。如涉及操作步骤，请务必分条列出。若参考资料未包含答案，请直接回复‘暂无说明’，严禁发散或编造。
-  >
-  > 【参考资料】：{context}
-  >
-  > 【用户问题】：{query}”
-
-### 步骤五：多模态前端交互呈现
-
-放弃臃肿的Web开发栈，采用纯Python框架 `Streamlit` 构建现代化聊天UI，展现RAG系统的直观价值。完成一个包含侧边栏和对话窗口的现代化Web UI。
-
-- **多模态渲染逻辑：**
-    1. 将检索到的 Top 文本拼接喂给大模型API，获取文字回答，并通过 `st.write()` 在聊天气泡中流式输出，将大模型生成的解答以打字机效果逐字呈现，提升用户等待体验。
-    2. **图片渲染：** 遍历被大模型采纳的 Top 检索结果的 `metadata`。如果发现 `image_path` 不为空，且该路径在本地存在，则紧接在文字回复下方，使用 `st.image(image_path, caption="参考图示")` 将PPT或Word中的原图渲染出来。这一“图文并茂、有理有据”的交互体验，将直观展现系统对企业非结构化资产的深度利用能力。
-
-## 四、 预期效果与技术优势总结
-
-1. **极致轻量、随处可跑：** 规避了本地显卡算力瓶颈，一台普通办公轻薄本即可流畅进行Demo演示。
-2. .**极速部署、代码精简：** 借助ChromaDB与Streamlit，整体核心代码可控，维护成本不高。
-3. **表现力强、贴近实战：** 创新的“元数据映射”方法绕过了昂贵的多模态大模型，以极低的成本实现了完美的图文联动问答，充分展示了AI赋能银行业务的实际商业价值。
-
-[//]: # (![260227_1]&#40;C:\Users\admin\Documents\我的文档\资料\课程资料\计算机科学\Markdown学习\图片素材\260227_1.png&#41;)
-
-<center>技术路线图</center>
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12+-blue.svg">
+  <img alt="Gradio" src="https://img.shields.io/badge/UI-Gradio-orange.svg">
+  <img alt="Vector DB" src="https://img.shields.io/badge/VectorDB-Chroma-brightgreen.svg">
+  <img alt="LLM" src="https://img.shields.io/badge/LLM-Qwen3.5--Flash-purple.svg">
+  <img alt="Embedding" src="https://img.shields.io/badge/Embedding-text--embedding--v4-red.svg">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey.svg">
+</p>
 
 
 
-## 五、应用前瞻
+---
 
-本Demo目前的架构验证了在轻量级环境下实现高精度图文网银问答的技术可行性。为了真正释放AI能力的商业价值，响应接入微信或飞书等实际生产需求，未来的应用演进将聚焦于**“架构服务化”**与**“渠道生态融合”**。
+## 项目简介
 
-#### 1. 架构升级，轻量化API服务化解耦
+本项目实现了一个面向**企业网银 FAQ 场景**的检索增强生成（RAG）系统。  
+系统以企业网银领域知识库为基础，结合**结构化 FAQ、图文说明文档、操作手册**等多源资料，实现对常见问题的自然语言问答，并在回答时同步展示**命中证据、来源信息与相关截图**。
 
-当前的Streamlit架构集成了界面与逻辑，不适合高并发和多渠道接入。未来的生产级架构将进行服务化解耦：
+与通用聊天机器人不同，本项目强调以下几个目标：
 
-- **构建统一AI中台API：** 使用FastAPI或Flask等高性能Web框架，将原方案中的“检索-推理-多模态渲染”逻辑封装为一个标准的Restful API服务。
-- **后端解耦：** Streamlit仅作为本地测试界面，实际生产请求将直接由后端API服务处理。这使得AI能力可以被任何第三方平台调用。
+- **面向垂直业务问题**，聚焦企业网银交易与操作常见问题；
+- **回答可追溯**，支持显示命中文档、来源文件、页码/页序、相关图示；
+- **本地轻量可运行**，适合会议演示与少量人员单机分发；
+- **工程结构清晰**，具备从知识解析、索引构建、检索融合到 UI 展示的完整链路；
+- **兼顾学术性与工程性**，可作为 RAG 系统设计、知识工程与智能问答方向的实践案例。
 
-#### 2. 生态融合，办公与社交渠道的深度对接
+---
 
-基于解耦后的统一API服务，系统可便捷地完成与各大办公协作平台及社交渠道的无缝对接。
+## 项目背景
 
-- **企业微信与飞书（办公生态）**
-    - **功能实现：** 利用企业微信开放平台或飞书开放平台的API/SDK，创建一个“企业网银助手”应用机器人。
-    - **交互逻辑：** 当员工在群聊或单聊中@机器人时，第三方平台服务器会将问题转发至我们的统一AI API服务，服务处理后将文本回复和参考图片路径返回，最终由机器人以“卡片消息”或图文消息的形式在企业微信/飞书中渲染输出。
-    - **价值：** 将银行运营支持能力直接嵌入企业客户的日常办公环境中，实现无缝、随时随地的服务。
-- **微信公众号与小程序（社交生态）**
-    - **公众号：** 通过微信公众平台配置服务器地址，将用户发送到公众号的提问接入系统API，实现自动回复。
-    - **小程序：** 开发一个独立的轻量级小程序，作为企业网银服务的移动端延伸，提供比Streamlit更贴合手机端体验的交互。
+在企业网银、数字金融与业务系统支持场景中，用户提出的问题通常具有如下特点：
 
-#### 3. 能力扩展，Agent 能力的深度演进
+1. **问题高度重复**，但表述方式存在差异；
+2. **知识源异构**，常同时分散在 Excel FAQ、Word 操作手册、PPT 图文说明中；
+3. **用户更关心“如何操作”与“到哪里查看”**，而不仅是抽象解释；
+4. **演示与落地要求强**，系统既要能答，还要能够展示“依据是什么”。
 
-在渠道打通的基础上，系统将进一步从单纯的“问答”向“行动”演进。
+基于以上特点，本项目没有追求复杂的智能体编排或重型知识系统，而是采用了**轻量、稳健、可追溯**的技术路线：
 
-- **引入Function Calling机制：** 赋予大模型调用外部API的能力。系统将不再仅仅回答“如何办理一笔代发工资交易”，而是能够依托银行受控API，直接协助用户“查询该笔交易实时进度”或“生成一笔预填写的交易表单（待确认）”。
-- **业务闭环：** 实现从问题咨询到业务预处理的完整闭环，极大提升RAG系统的实战价值和用户粘性。
+- 用结构化解析统一知识格式；
+- 用向量检索 + BM25 混合召回增强稳定性；
+- 用云端大模型做答案组织与语言表达；
+- 用本地图文证据展示强化可信度与演示效果。
 
-#### 4. 安全与合规
+---
 
-面向生产环境，系统将建立严苛的安全堡垒。
+## 核心特性
 
-- **数据脱敏与隐私保护：** 在请求发送至云端大模型前，本地API服务将增加PII（个人可识别信息）识别和脱敏层，确保银行敏感数据不泄露。
-- **内容审计层：** 在大模型输出端增加基于策略的审计层，对所有生成的金融回复进行合规性检查，确保回复内容的绝对严谨与准确。
+- **多源知识接入**
+    - Excel：结构化 FAQ
+    - Word：流程型操作手册
+    - PPT：图文问题说明
+
+- **统一知识抽象**
+    - 将不同文件来源统一为标准 `KBChunk` 结构
+    - 支持 `title / category / full_text / image_paths / page_no / slide_no / priority`
+
+- **混合检索策略**
+    - 向量检索（Chroma）
+    - BM25 关键词检索
+    - 标题精确/模糊匹配增强
+    - 规则重排（分类命中、来源优先级、图片证据偏置等）
+
+- **证据驱动生成**
+    - 检索层决定证据
+    - PromptBuilder 负责组织上下文
+    - LLM 仅基于证据生成答案，降低幻觉风险
+
+- **图文问答体验**
+    - 左侧对话区
+    - 右侧证据摘要、命中证据表
+    - 相关截图画廊展示
+    - 调试区输出规范化查询与重排原因
+
+- **适合单机演示**
+    - 文档向量离线构建
+    - 运行时仅对用户 Query 做云端向量化
+    - 无需在终端部署本地大模型
+
+---
+
+## 技术架构
+
+### 整体架构
+
+```text
+用户问题
+   │
+   ▼
+Query 预处理 / 术语归一化
+   │
+   ├──► 云端 Embedding（text-embedding-v4）
+   │         │
+   │         ▼
+   │    Chroma 向量检索
+   │
+   └──► BM25 关键词检索
+             │
+             ▼
+      混合召回与规则重排
+             │
+             ▼
+       Prompt 构造（证据组织）
+             │
+             ▼
+     云端 LLM（qwen3.5-flash）
+             │
+             ▼
+ 回答生成 + 来源依据 + 图文证据展示
+```
+
+### 技术选型
+
+| 模块        | 方案                                            |
+|-----------|-----------------------------------------------|
+| 生成模型      | Qwen3.5-Flash（阿里云百炼 OpenAI 兼容接口）              |
+| Embedding | text-embedding-v4                             |
+| 向量数据库     | Chroma PersistentClient                       |
+| 关键词检索     | BM25                                          |
+| 前端界面      | Gradio Blocks                                 |
+| 数据解析      | pandas / openpyxl / python-docx / python-pptx |
+| 工程配置      | pydantic-settings / yaml / dotenv             |
+| 打包分发      | PyInstaller（可选）                               |
+
+------
+
+## 检索与生成设计
+
+### 1. 知识清洗与统一
+
+不同来源文件在进入系统前会被统一转换为标准知识块：
+
+- Excel：一行 FAQ 一条知识块
+- PPT：一页 slide 一条知识块
+- DOCX：一节或一个流程说明一条知识块
+
+统一字段包括：
+
+- `doc_id`
+- `source_file`
+- `source_type`
+- `title`
+- `category`
+- `question`
+- `answer`
+- `full_text`
+- `keywords`
+- `image_paths`
+- `slide_no`
+- `page_no`
+- `priority`
+- `chunk_hash`
+
+### 2. 混合召回
+
+系统同时使用两种召回机制：
+
+- **向量检索**：解决用户表述不规范、语义改写问题；
+- **BM25 检索**：强化对业务术语、菜单路径、错误信息、关键词的精确命中。
+
+### 3. 规则重排
+
+候选结果会进一步做规则重排，考虑：
+
+- query 与 title 的整句精确匹配
+- 标题高相似 / 包含关系
+- 关键词精确命中
+- 分类命中
+- 来源优先级
+- 是否包含图像证据
+
+### 4. 证据驱动回答
+
+LLM 不直接“自由作答”，而是只基于检索证据完成：
+
+- 结论提炼
+- 操作步骤整理
+- 补充说明归纳
+- 来源依据展示
+
+------
+
+## 项目目录
+
+```text
+ebank_rag_demo/
+├─ app/
+│  ├─ __init__.py
+│  ├─ config.py                  # 配置加载
+│  ├─ models.py                  # 核心数据模型
+│  ├─ logging_utils.py           # 日志初始化
+│  ├─ clients/
+│  │  ├─ embedding_client.py     # Embedding API 封装
+│  │  └─ llm_client.py           # LLM API 封装
+│  ├─ retrieval/
+│  │  ├─ query_normalizer.py     # Query 规范化与术语归一
+│  │  ├─ bm25_index.py           # BM25 索引加载与查询
+│  │  ├─ vector_store.py         # Chroma 检索封装
+│  │  └─ hybrid_retriever.py     # 混合检索与重排
+│  ├─ services/
+│  │  ├─ prompt_builder.py       # Prompt 构造
+│  │  └─ chat_service.py         # 主业务服务层
+│  └─ ui/
+│     └─ app.py                  # Gradio UI
+├─ scripts/
+│  ├─ parse_excel_faq.py         # Excel FAQ 解析
+│  ├─ parse_ppt_kb.py            # PPT 图文知识解析
+│  ├─ parse_docx_manual.py       # Word 手册解析
+│  ├─ build_kb.py                # 合并生成 kb.jsonl
+│  ├─ build_indexes.py           # 构建 Chroma 与 BM25 索引
+│  ├─ smoke_test.py              # 全链路最小冒烟测试
+│  └─ test/                      # 其他临时调试脚本
+├─ data/
+│  ├─ raw/                       # 原始知识文件
+│  ├─ parsed/
+│  │  ├─ kb.jsonl                # 统一知识库
+│  │  └─ images/                 # 提取出的图像资源
+│  └─ index/
+│     ├─ chroma_db/              # 向量索引
+│     └─ bm25/                   # BM25 索引
+├─ config/
+│  ├─ settings.yaml              # 检索与 UI 配置
+│  └─ synonyms.json              # 同义词与术语映射
+├─ logs/                         # 运行日志
+├─ .env.example                  # 环境变量模板
+├─ requirements.txt
+├─ environment.yaml
+└─ main.py                       # 启动入口
+```
+
+------
+
+## 快速开始
+
+### 1. 克隆仓库
+
+```bash
+git clone https://github.com/yourname/enterprise-ebank-faq-rag-demo.git
+cd enterprise-ebank-faq-rag-demo
+```
+
+### 2. 创建虚拟环境并安装依赖
+
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+### 3. 配置环境变量
+
+复制 `.env.example` 为 `.env`，并填写你的百炼 API Key：
+
+```env
+DASHSCOPE_API_KEY=your_api_key_here
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL=qwen3.5-flash
+EMBED_MODEL=text-embedding-v4
+APP_ENV=development
+```
+
+### 4. 准备知识库原始文件
+
+将原始文件放入：
+
+```text
+data/raw/
+```
+
+例如：
+
+- `企业网银常见问题.xlsx`
+- `企业网银问题带图.pptx`
+- `操作手册-如何网银代发工资.docx`
+
+------
+
+## 数据构建流程
+
+### Step 1：解析 Excel FAQ
+
+```bash
+python scripts/parse_excel_faq.py --input data/raw/企业网银常见问题.xlsx --output data/parsed/excel_kb.jsonl
+```
+
+### Step 2：解析 PPT 图文知识
+
+```bash
+python scripts/parse_ppt_kb.py --input data/raw/企业网银问题带图.pptx --output data/parsed/ppt_kb.jsonl
+```
+
+### Step 3：解析 Word 手册
+
+```bash
+python scripts/parse_docx_manual.py --input data/raw/操作手册-如何网银代发工资.docx --output data/parsed/docx_kb.jsonl
+```
+
+### Step 4：合并知识库
+
+```bash
+python scripts/build_kb.py --inputs data/parsed/excel_kb.jsonl data/parsed/ppt_kb.jsonl data/parsed/docx_kb.jsonl --output data/parsed/kb.jsonl
+```
+
+### Step 5：构建索引
+
+```bash
+python scripts/build_indexes.py --input data/parsed/kb.jsonl --rebuild
+```
+
+------
+
+## 启动 Demo
+
+```bash
+python main.py
+```
+
+启动后会自动打开本地 Gradio 页面。
+你将看到：
+
+- 左侧：聊天对话区
+- 右侧：命中证据表、证据摘要、相关截图
+- 下方：调试信息区域
+
+------
+
+## 测试与验收
+
+### 1. 检索层测试
+
+可使用临时脚本验证：
+
+- Chroma 可读性
+- BM25 可加载性
+- `HybridRetriever.retrieve()` 的 top-k 命中质量
+
+### 2. LLM 最小调用测试
+
+验证 `LLMClient.ask()` 是否可正常访问模型接口。
+
+### 3. PromptBuilder 测试
+
+验证 Prompt 是否正确拼装了用户问题与证据上下文。
+
+### 4. 全链路冒烟测试
+
+```bash
+python scripts/smoke_test.py
+```
+
+建议测试问题包括：
+
+- 代发工资失败了在哪里看？
+- UKey 插上没反应怎么办？
+- 用户暂无权限怎么办？
+- 电子回单印章显示红叉怎么办？
+- 为什么每次登录都要重新下载控件？
+- 代发工资报 undefined message 怎么办？
+
+------
+
+## 界面预览
+
+> 你可以在这里替换为项目截图或录屏 GIF。
+
+```text
+[左侧] 聊天区
+[右侧上] 证据摘要
+[右侧中] 命中证据表
+[右侧下] 图像证据画廊
+[底部] 调试信息
+```
+
+建议你在 GitHub 仓库中加入：
+
+- `assets/demo_home.png`
+- `assets/demo_answer.png`
+- `assets/demo_gallery.png`
+
+并在 README 中插图展示。
+
+------
+
+## 设计亮点
+
+### 1. 不是“只会聊天”的模型 Demo，而是可追溯的业务问答系统
+
+系统不仅给出答案，还会展示：
+
+- 命中的知识来源
+- 文件类型
+- 页码 / 页序
+- 图文证据
+
+这使得回答更可信，也更适合业务演示。
+
+### 2. 轻量而稳健
+
+项目没有引入复杂 Agent 框架，而是采用明确的工程分层：
+
+- 数据解析
+- 索引构建
+- 混合检索
+- Prompt 构造
+- 生成与展示
+
+这种设计更容易调试、更适合落地、更利于单机演示部署。
+
+### 3. 兼顾语义理解与业务精确匹配
+
+企业网银 FAQ 中存在大量：
+
+- 菜单路径
+- 报错短语
+- 固定表述
+- 相似标题
+
+仅依赖向量检索容易漏掉精确问题，仅依赖关键词检索又不够鲁棒。
+本项目通过**向量检索 + BM25 + 标题匹配 + 规则重排**，在效果与稳定性之间取得平衡。
+
+------
+
+## 技术实施路线
+
+本项目的实施路线可概括为五个阶段：
+
+### 第一阶段：知识工程
+
+- 统一清洗 Excel / Word / PPT 三类资料
+- 抽取图文资源
+- 设计统一知识块结构
+
+### 第二阶段：离线索引构建
+
+- 文档向量离线生成
+- Chroma 持久化
+- BM25 本地索引建立
+
+### 第三阶段：检索与重排
+
+- Query 规范化
+- 混合召回
+- 标题匹配增强
+- 规则重排优化
+
+### 第四阶段：生成与展示
+
+- PromptBuilder 证据组织
+- LLM 输出答案
+- UI 侧证据回显
+
+### 第五阶段：演示与封装
+
+- 冒烟测试
+- 单机演示验证
+- PyInstaller 打包（可选）
+
+![Technical Roadmap](assets/technical_roadmap.png)
+
+<p align="center">
+ Technical Roadmap
+</p>
+
+
+------
+
+## 技术优势
+
+### 1. 面向演示与交付优化
+
+项目从设计之初就不是纯研究原型，而是考虑了：
+
+- 单机运行
+- 少量人员分发
+- 会议稳定展示
+- 轻量终端适配
+
+### 2. 证据导向，降低幻觉
+
+模型并不直接“凭感觉回答”，而是受到检索证据严格约束。
+这对业务 FAQ 场景至关重要。
+
+### 3. 模块边界清晰
+
+不同模块职责明确，便于：
+
+- 单独测试
+- 替换模型
+- 调整检索策略
+- 后续扩展更多知识源
+
+### 4. 可扩展性强
+
+当前系统面向企业网银 FAQ，但整体架构可迁移到：
+
+- 银行客服知识库
+- 企业内部 IT 支持 FAQ
+- 产品帮助中心
+- 操作手册问答
+- 政务/教育/医疗等垂直知识服务
+
+------
+
+## 应用前景
+
+本项目虽然以 Demo 形式实现，但具有明确的工程延展性。
+其后续演进方向包括：
+
+### 1. 企业级知识服务助手
+
+可扩展到更大范围的企业网银帮助中心、内部知识门户或智能客服前台。
+
+### 2. 多模态知识问答
+
+当前系统已经具备图像证据展示能力，未来可进一步增强 OCR、图文联合理解、截图定位等功能。
+
+### 3. 更丰富的证据治理
+
+未来可增加：
+
+- 文档版本管理
+- 知识热度分析
+- 问题命中统计
+- 失败问题反向补库
+
+### 4. 学术与工程研究价值
+
+该项目不仅是一个工程 Demo，也适合作为以下方向的实践案例：
+
+- 检索增强生成（RAG）
+- 垂直领域知识问答
+- 轻量知识系统设计
+- 混合检索与规则重排
+- 可解释问答系统
+
+------
+
+## Roadmap
+
+-  多源知识接入（Excel / DOCX / PPTX）
+-  本地 Chroma + BM25 混合检索
+-  Prompt 驱动证据生成
+-  Gradio 图文问答界面
+-  单机演示可运行版本
+-  标题精确匹配直通优化
+-  中文 BM25 分词增强
+-  更完善的检索评估脚本
+-  一键打包与安装脚本
+-  Docker 化部署支持
+-  更丰富的知识库增量更新机制
+
+------
+
+## 适合谁
+
+本项目适合以下读者和使用者：
+
+- 想学习 **RAG 系统工程落地** 的开发者
+- 想实现 **垂直 FAQ 智能问答 Demo** 的学生或研究人员
+- 关注 **知识工程、信息检索、智能客服、业务问答** 的工程团队
+- 需要构建 **演示型、单机可运行、证据可展示** 的智能问答系统的开发者
+
+------
+
+## 许可证
+
+本项目采用 `MIT License`。
+如用于商业项目或二次开发，请根据实际情况补充版权与数据使用说明。
+
+------
+
+## 致谢
+
+本项目的实现参考并受益于以下技术生态：
+
+- [Gradio](https://github.com/gradio-app/gradio)
+- [Chroma](https://github.com/chroma-core/chroma)
+- [OpenAI Python SDK](https://github.com/openai/openai-python)
+- [RapidFuzz](https://github.com/maxbachmann/RapidFuzz)
+
+同时感谢大模型、检索增强生成与开源工具生态为智能问答工程实践提供的基础能力。
+
+------
+
+## Star History
+
+如果这个项目对你有帮助，欢迎点一个 Star。

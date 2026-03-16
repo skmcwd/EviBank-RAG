@@ -1,6 +1,6 @@
 retrieval:
-  vector_top_k: 8
-  bm25_top_k: 8
+  vector_top_k: 20
+  bm25_top_k: 20
   final_context_k: 6
 
 rerank:
@@ -14,11 +14,12 @@ ui:
   app_title: "企业网银 FAQ RAG Demo"
   app_subtitle: "基于阿里云百炼 OpenAI 兼容接口的企业网银智能问答演示"
   example_questions:
-    - "企业网银登录时提示控件未安装怎么办？"
-    - "UKey 插入后无法识别如何处理？"
-    - "如何开通代发功能？"
-    - "为什么没有转账权限？"
-    - "回单在哪里查询和下载？"
+    - "客户代发工具转换有问题怎么办？"
+    - "客户证书过期了怎么更新？"
+    - "客户反复安装了控件、驱动，还是识别不到UK怎么办？"
+    - "代发工资结果查询方式？"
+    - "企业网银限额在哪里看？"
+    - "怎么向保证金账户转账？"
 
 source_priority:
   excel: 1.0

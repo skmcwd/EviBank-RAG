@@ -1,5 +1,9 @@
 # 详细介绍
-> 在运行该项目前，先在根目录下加入`.env`文件
+> 在运行该项目前，先使用下列命令创建conda环境：
+```pycon
+conda env create -f environment.yaml
+```
+> 然后在根目录下加入`.env`文件：
 ```dotenv
 # 阿里云百炼 API Key，用于调用 OpenAI 兼容接口,不能公开
 DASHSCOPE_API_KEY=(填入你的API KEY)

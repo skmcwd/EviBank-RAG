@@ -2,7 +2,7 @@
 
 ## 1.1 运行时架构
 
-最终交付到会议设备上的程序，只做这几件事：
+最终交付的程序，做这几件事：
 
 1. 读取本地 `Chroma` 向量库
 2. 读取本地 `BM25` 索引
@@ -201,6 +201,9 @@ ebank_rag_demo/
 
 统一日志格式。
 
+- 控制台或终端会输出日志
+- 在logs下会保存本次运行的所有日志，按照每次运行的时间分文件夹，目录中存放本次运行了的文件的日志，命名为`文件名-日期-时间.log`
+
 ## 文件 6：`app/models.py`
 
 ### 作用
@@ -285,7 +288,8 @@ ebank_rag_demo/
 
 # Step 3：接入百炼 Embedding 与离线索引构建
 
-百炼提供 OpenAI 兼容的 Embedding 接口，因此你完全可以直接用 `openai` Python SDK，只换 `base_url` 和模型名。`text-embedding-v4` 是百炼当前支持的文本向量模型之一。
+百炼提供 OpenAI 兼容的 Embedding 接口，因此你完全可以直接用 `openai` Python SDK，只换 `base_url` 和模型名。
+`text-embedding-v4` 是百炼当前支持的文本向量模型之一。
 
 ------
 
@@ -315,7 +319,8 @@ ebank_rag_demo/
 - 同时构建 BM25
 - 保存语料与倒排所需元数据
 
-Chroma 的 collection 用来统一存储 `ids/documents/metadatas/embeddings`，查询结果按索引对齐；同时它支持 metadata `where` 和 `where_document` 过滤，这对你后面按分类过滤、按关键字约束都很有用。
+Chroma 的 collection 用来统一存储 `ids/documents/metadatas/embeddings`，查询结果按索引对齐；同时它支持 metadata `where` 和
+`where_document` 过滤，这对你后面按分类过滤、按关键字约束都很有用。
 
 # Step 4：实现运行时检索基础层
 
@@ -425,7 +430,8 @@ Chroma 的 collection 用来统一存储 `ids/documents/metadatas/embeddings`，
 # Step 7：实现 Gradio 前端
 
 不用简单的 `ChatInterface`，因为有右侧证据面板需求。
-Gradio 官方文档明确说明 `Blocks` 是更底层、布局控制更强的方式，适合自定义布局与复杂交互；`Chatbot` 负责聊天展示，`Gallery` 可展示图片，`Dataframe` 适合展示命中证据表，`Accordion` 可放调试信息。
+Gradio 官方文档明确说明 `Blocks` 是更底层、布局控制更强的方式，适合自定义布局与复杂交互；`Chatbot` 负责聊天展示，`Gallery`
+可展示图片，`Dataframe` 适合展示命中证据表，`Accordion` 可放调试信息。
 
 ------
 

@@ -22,6 +22,7 @@ from app.models import KBChunk  # noqa: E402
 
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 HEADER_ALIASES: dict[str, tuple[str, ...]] = {
@@ -416,8 +417,8 @@ def main() -> int:
     命令行主入口。
     """
     args = parse_args()
-    setup_logging(args.log_level)
-
+    setup_logging(args.log_level, module_name=__name__)
+    # setup_logging(level="INFO", module_name=__name__)
     input_path: Path = args.input.expanduser().resolve()
     output_path: Path = args.output.expanduser().resolve()
     sheet_name = parse_sheet_arg(args.sheet)

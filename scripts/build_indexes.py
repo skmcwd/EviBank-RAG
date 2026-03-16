@@ -35,7 +35,7 @@ ASCII_TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 CJK_SPAN_RE = re.compile(r"[\u4e00-\u9fff]+")
 
 DEFAULT_COLLECTION_NAME = "ebank_faq_kb"
-DEFAULT_BATCH_SIZE = 64
+DEFAULT_BATCH_SIZE = 8
 DEFAULT_PRIORITY_BY_SOURCE_TYPE: dict[str, float] = {
     "docx": 1.1,
     "excel": 1.0,
@@ -631,8 +631,9 @@ def make_chroma_metadata(chunk: KBChunk) -> dict[str, Any]:
         "source_type": chunk.source_type,
         "title": chunk.title,
         "priority": float(chunk.priority),
-        "image_paths": chunk.image_paths,
-        "keywords": chunk.keywords,
+        "has_image": bool(chunk.image_paths),
+        # "image_paths": chunk.image_paths,
+        # "keywords": chunk.keywords,
     }
 
     if chunk.category is not None:
@@ -641,7 +642,11 @@ def make_chroma_metadata(chunk: KBChunk) -> dict[str, Any]:
         metadata["slide_no"] = int(chunk.slide_no)
     if chunk.page_no is not None:
         metadata["page_no"] = int(chunk.page_no)
-
+    # 只在非空时写入列表字段
+    if chunk.image_paths:
+        metadata["image_paths_json"] = json.dumps(chunk.image_paths, ensure_ascii=False)
+    if chunk.keywords:
+        metadata["keywords_text"] = " | ".join(chunk.keywords)
     return metadata
 
 
@@ -901,7 +906,7 @@ def main() -> int:
     命令行主入口。
     """
     args = parse_args()
-    setup_logging(args.log_level)
+    setup_logging(args.log_level, module_name=__name__)
 
     if args.batch_size <= 0:
         logger.error("--batch-size 必须大于 0。")
@@ -973,7 +978,7 @@ def main() -> int:
 
         embedder = EmbeddingClient(
             model=settings.models.embed_model,
-            batch_size=args.batch_size,
+            batch_size=min(args.batch_size, 10)
         )
 
         inserted_chunks = upsert_chunks_to_chroma(

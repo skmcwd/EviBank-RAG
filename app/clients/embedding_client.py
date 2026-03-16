@@ -15,14 +15,15 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
-
+from urllib.parse import urlparse
 from app.config import get_settings
+from app.logging_utils import setup_logging
 
 logger = logging.getLogger(__name__)
 
 _WHITESPACE_RE = re.compile(r"\s+")
 _DEFAULT_MAX_TEXT_CHARS = 6000
-_DEFAULT_BATCH_SIZE = 64
+_DEFAULT_BATCH_SIZE = 8
 _DEFAULT_TIMEOUT_SECONDS = 60.0
 
 
@@ -61,6 +62,7 @@ class EmbeddingClient:
             batch_size: int = _DEFAULT_BATCH_SIZE,
             timeout: float = _DEFAULT_TIMEOUT_SECONDS,
     ) -> None:
+        setup_logging(level="INFO", module_name=__name__)
         settings = get_settings()
 
         resolved_base_url = (base_url or settings.openai_base_url).strip()
@@ -79,7 +81,13 @@ class EmbeddingClient:
             raise EmbeddingClientError("Embedding 客户端初始化失败：batch_size 必须大于 0。")
         if timeout <= 0:
             raise EmbeddingClientError("Embedding 客户端初始化失败：timeout 必须大于 0。")
-
+        parsed = urlparse(resolved_base_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise EmbeddingClientError(
+                f"Embedding 客户端初始化失败：base_url 非法，当前值为 {resolved_base_url!r}。"
+                "请确认 .env 中 DASHSCOPE_BASE_URL 是纯 URL，例如 "
+                "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            )
         self.base_url = resolved_base_url
         self.api_key = resolved_api_key
         self.model = resolved_model
@@ -94,7 +102,7 @@ class EmbeddingClient:
         )
 
         logger.info(
-            "EmbeddingClient 初始化完成：base_url=%s, model=%s, batch_size=%s, max_text_chars=%s",
+            "EmbeddingClient 初始化完成：base_url=%r, model=%s, batch_size=%s, max_text_chars=%s",
             self.base_url,
             self.model,
             self.batch_size,
@@ -309,7 +317,7 @@ class EmbeddingClient:
                 batch_idx + 1,
                 total_batches,
                 len(batch_inputs),
-                )
+            )
 
             try:
                 batch_vectors = self._request_embeddings(batch_inputs)

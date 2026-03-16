@@ -241,7 +241,7 @@ ebank_rag_demo/
 ------
 
 ## 快速开始
-
+> 代码详细介绍见[Intro.md](Intro.md)
 ### 1. 克隆仓库
 
 ```bash
@@ -252,16 +252,12 @@ cd enterprise-ebank-faq-rag-demo
 ### 2. 创建虚拟环境并安装依赖
 
 ```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-
-pip install -r requirements.txt
+conda env create -f environment.yaml
 ```
 
 ### 3. 配置环境变量
 
-复制 `.env.example` 为 `.env`，并填写你的百炼 API Key：
+重命名 `.env.example` 为 `.env`，并填写你的百炼 API Key：
 
 ```env
 DASHSCOPE_API_KEY=your_api_key_here

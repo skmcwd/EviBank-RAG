@@ -6,8 +6,8 @@
 
 ## 一、项目简介
 
-#### **项目主页：**[GitHub](https://github.com/skmcwd/EviBank-RAG)
-
+#### 项目主页：**[GitHub](https://github.com/skmcwd/EviBank-RAG)**
+#### 发布版下载 **[链接](https://github.com/skmcwd/EviBank-RAG/releases)**
 #### 版本：release_v1.0
 
 EviBank-RAG 是一个面向企业网银常见问题场景的问答演示系统。  

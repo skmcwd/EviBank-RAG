@@ -20,6 +20,8 @@ ui:
     - "代发工资结果查询方式？"
     - "企业网银限额在哪里看？"
     - "怎么向保证金账户转账？"
+paths:
+  share: True
 
 source_priority:
   excel: 1.0

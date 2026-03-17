@@ -1,8 +1,8 @@
 # 银证智答
+
 ### 面向企业网银的证据增强检索生成系统
 
 #### EviBank-RAG: Evidence-Grounded Retrieval-Augmented QA System for Enterprise E-Banking
-
 
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.12+-blue.svg">
@@ -16,7 +16,9 @@
 > 一个面向**企业网银交易常见问题**场景的轻量级 RAG 问答机器人 Demo。  
 > 项目聚焦“**本地可运行、易于演示、证据可追溯、图文可展示**”的工程目标，适用于企业内部知识问答、业务 FAQ 辅助检索与会议演示场景。
 >
-> Built a lightweight evidence-grounded RAG system for enterprise e-banking FAQ, featuring multi-source knowledge ingestion, hybrid retrieval, source-aware reranking, and explainable answer generation with visual evidence presentation.
+> Built a lightweight evidence-grounded RAG system for enterprise e-banking FAQ, featuring multi-source knowledge
+> ingestion, hybrid retrieval, source-aware reranking, and explainable answer generation with visual evidence
+> presentation.
 
 
 ---
@@ -24,7 +26,8 @@
 ## 项目简介
 
 本项目实现了一个面向**企业网银 FAQ 场景**的检索增强生成（RAG）系统。  
-系统以企业网银领域知识库为基础，结合**结构化 FAQ、图文说明文档、操作手册**等多源资料，实现对常见问题的自然语言问答，并在回答时同步展示**命中证据、来源信息与相关截图**。
+系统以企业网银领域知识库为基础，结合**结构化 FAQ、图文说明文档、操作手册**等多源资料，实现对常见问题的自然语言问答，并在回答时同步展示
+**命中证据、来源信息与相关截图**。
 
 与通用聊天机器人不同，本项目强调以下几个目标：
 
@@ -241,12 +244,14 @@ ebank_rag_demo/
 ------
 
 ## 快速开始
+
 > 代码详细介绍见[Intro.md](Intro.md)
+
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/yourname/enterprise-ebank-faq-rag-demo.git
-cd enterprise-ebank-faq-rag-demo
+git clone https://github.com/skmcwd/EviBank-RAG.git
+cd EviBank-RAG
 ```
 
 ### 2. 创建虚拟环境并安装依赖
@@ -369,23 +374,22 @@ python scripts/smoke_test.py
 
 ## 界面预览
 
-> 你可以在这里替换为项目截图或录屏 GIF。
+![image-20260317182050178](assets/ui_light.png)
 
-```text
-[左侧] 聊天区
-[右侧上] 证据摘要
-[右侧中] 命中证据表
-[右侧下] 图像证据画廊
-[底部] 调试信息
-```
+<p align="center">Light UI
+</p>
 
-建议你在 GitHub 仓库中加入：
+![ui_dark](assets\ui_dark.png)
 
-- `assets/demo_home.png`
-- `assets/demo_answer.png`
-- `assets/demo_gallery.png`
+<p align="center">
+Dark UI
+</p>
 
-并在 README 中插图展示。
+![eviAbs_debug](assets\eviAbs_debug.png)
+
+<p align="center">
+Evidence Abstract & Debug Interface
+</p>
 
 ------
 
@@ -466,7 +470,7 @@ python scripts/smoke_test.py
 ![Technical Roadmap](assets/technical_roadmap.png)
 
 <p align="center">
- Technical Roadmap
+Technical Roadmap
 </p>
 
 
@@ -545,17 +549,17 @@ python scripts/smoke_test.py
 
 ## Roadmap
 
--  多源知识接入（Excel / DOCX / PPTX）
--  本地 Chroma + BM25 混合检索
--  Prompt 驱动证据生成
--  Gradio 图文问答界面
--  单机演示可运行版本
--  标题精确匹配直通优化
--  中文 BM25 分词增强
--  更完善的检索评估脚本
--  一键打包与安装脚本
--  Docker 化部署支持
--  更丰富的知识库增量更新机制
+- [x] 多源知识接入（Excel / DOCX / PPTX）
+- [x] 本地 Chroma + BM25 混合检索
+- [x] Prompt 驱动证据生成
+- [x] Gradio 图文问答界面
+- [x] 单机演示可运行版本
+- [ ] 标题精确匹配直通优化
+- [ ] 中文 BM25 分词增强
+- [ ] 更完善的检索评估脚本
+- [ ] 一键打包与安装脚本
+- [ ] Docker 化部署支持
+- [ ] 更丰富的知识库增量更新机制
 
 ------
 

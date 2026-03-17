@@ -222,8 +222,11 @@ def main() -> int:
         demo.launch(
             server_name=launch_options["server_name"],
             server_port=launch_options["server_port"],
-            share=launch_options["share"],
-            inbrowser=launch_options["inbrowser"],
+            # share=launch_options["share"], # 不启动ssh映射
+            share=True,  # 启动ssh映射，实现外部访问
+            # inbrowser=launch_options["inbrowser"], # 不自动打开网页
+            inbrowser=True,  # 自动打开网页
+
         )
     except Exception as exc:
         logger.exception("Gradio 启动失败：%s", exc)

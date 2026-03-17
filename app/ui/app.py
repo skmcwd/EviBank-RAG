@@ -22,116 +22,98 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# 你发布到 GitHub 后，把下面 URL 改成真实仓库地址即可
+# GitHub 仓库配置
 GITHUB_REPO_URL = "https://github.com/skmcwd/EviBank-RAG"
 GITHUB_REPO_NAME = "evibank-rag"
 PROJECT_BRAND_NAME = "EviBank-RAG"
 
-# 用于后台执行 ChatService.chat，使前端可以持续刷新“处理中动画 + 计时器”
 EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
 CUSTOM_CSS = r"""
 /* =========================================
-   1. Theme Variables
+   1. Theme Variables (Modern & Unified)
    ========================================= */
 :root,
 .light,
 [data-theme="light"] {
-  --ebank-primary: #1f5eff;
-  --ebank-primary-2: #5b8cff;
-  --ebank-accent: #103f82;
-  --ebank-bg: #f3f7fc;
-  --ebank-bg-soft: #edf3fb;
+  --ebank-primary: #005bac;
+  --ebank-primary-hover: #004b8e;
+  --ebank-accent: #003f7a;
+  --ebank-bg: #f4f7fa;
+  --ebank-bg-soft: #f0f4f8;
   --ebank-card: #ffffff;
-  --ebank-card-2: #f9fbff;
-  --ebank-border: #d7e1ee;
-  --ebank-border-strong: #c5d3e5;
-  --ebank-text: #17324d;
-  --ebank-text-soft: #5c6f86;
-  --ebank-text-faint: #7b8ca3;
-  --ebank-shadow: 0 14px 36px rgba(18, 48, 84, 0.08);
-  --ebank-shadow-soft: 0 8px 22px rgba(18, 48, 84, 0.05);
-  --ebank-success: #10b981;
-  --ebank-warning: #f59e0b;
-
-  --ebank-user-bubble-bg: linear-gradient(135deg, #2d6dff, #7ea6ff);
+  --ebank-card-2: #fcfdfe;
+  --ebank-border: #e2e8f0;
+  --ebank-border-strong: #cbd5e1;
+  --ebank-text: #1e293b;
+  --ebank-text-soft: #475569;
+  --ebank-text-faint: #94a3b8;
+  --ebank-shadow: 0 10px 25px rgba(0, 40, 100, 0.06);
+  --ebank-shadow-soft: 0 4px 12px rgba(0, 40, 100, 0.04);
+  
+  --ebank-user-bubble-bg: var(--ebank-primary);
   --ebank-user-bubble-text: #ffffff;
-  --ebank-bot-bubble-bg: #f7faff;
-  --ebank-bot-bubble-border: #dbe6f3;
+  --ebank-bot-bubble-bg: #f8fafc;
+  --ebank-bot-bubble-border: #e2e8f0;
 
-  --ebank-radius-xl: 24px;
-  --ebank-radius-lg: 18px;
-  --ebank-radius-md: 14px;
-  --ebank-radius-sm: 10px;
+  --ebank-radius-xl: 20px;
+  --ebank-radius-lg: 16px;
+  --ebank-radius-md: 12px;
+  --ebank-radius-sm: 8px;
 }
 
 .dark,
 body.dark,
 [data-theme="dark"],
 .gradio-container.dark {
-  --ebank-primary: #7ca6ff;
-  --ebank-primary-2: #9ab8ff;
-  --ebank-accent: #b9d1ff;
-  --ebank-bg: #0c1118;
-  --ebank-bg-soft: #101722;
-  --ebank-card: #141c27;
-  --ebank-card-2: #182230;
-  --ebank-border: #243345;
-  --ebank-border-strong: #31445a;
-  --ebank-text: #e6edf7;
-  --ebank-text-soft: #b6c5d9;
-  --ebank-text-faint: #8fa3b9;
-  --ebank-shadow: 0 20px 46px rgba(0, 0, 0, 0.28);
-  --ebank-shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.22);
-  --ebank-success: #34d399;
-  --ebank-warning: #fbbf24;
+  --ebank-primary: #3b82f6; 
+  --ebank-primary-hover: #60a5fa;
+  --ebank-accent: #93c5fd;
+  --ebank-bg: #0f172a;
+  --ebank-bg-soft: #1e293b;
+  --ebank-card: #1e293b;
+  --ebank-card-2: #243147;
+  --ebank-border: #334155;
+  --ebank-border-strong: #475569;
+  --ebank-text: #f8fafc;
+  --ebank-text-soft: #cbd5e1;
+  --ebank-text-faint: #94a3b8;
+  --ebank-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  --ebank-shadow-soft: 0 6px 16px rgba(0, 0, 0, 0.3);
 
-  --ebank-user-bubble-bg: linear-gradient(135deg, #27468a, #3861ba);
-  --ebank-user-bubble-text: #eef5ff;
-  --ebank-bot-bubble-bg: #111926;
-  --ebank-bot-bubble-border: #243345;
+  --ebank-user-bubble-bg: #2563eb;
+  --ebank-user-bubble-text: #ffffff;
+  --ebank-bot-bubble-bg: #152033;
+  --ebank-bot-bubble-border: #334155;
 }
 
 /* =========================================
-   2. Global
+   2. Global Typography & Spacing
    ========================================= */
 html, body {
   background: var(--ebank-bg) !important;
   color: var(--ebank-text) !important;
 }
 
-body {
-  overflow-x: hidden;
-}
-
 .gradio-container {
   max-width: 1560px !important;
   margin: 0 auto !important;
-  padding: 20px 22px 18px 22px !important;
-  background:
-    radial-gradient(circle at top left, rgba(91, 140, 255, 0.08), transparent 26%),
-    linear-gradient(180deg, var(--ebank-bg) 0%, var(--ebank-bg-soft) 100%) !important;
-  color: var(--ebank-text) !important;
-  font-family:
-    "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue",
-    Arial, sans-serif !important;
-}
-
-#evibank-root {
-  color: var(--ebank-text);
+  padding: 24px 32px !important;
+  background: var(--ebank-bg) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
 }
 
 #evibank-main-row {
-  gap: 18px;
+  gap: 24px;
   align-items: stretch;
 }
 
 #evibank-bottom-row {
-  margin-top: 18px;
+  margin-top: 24px;
 }
 
 .evibank-column {
-  gap: 18px !important;
+  gap: 24px !important;
 }
 
 /* =========================================
@@ -140,531 +122,297 @@ body {
 #evibank-header {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(135deg, rgba(20, 64, 148, 0.32), rgba(12, 30, 67, 0.12)),
-    linear-gradient(90deg, rgba(16, 54, 120, 0.78), rgba(10, 26, 54, 0.92));
-  border: 1px solid rgba(92, 138, 224, 0.16);
-  border-radius: 32px;
-  padding: 28px 30px 24px 30px;
-  box-shadow: 0 18px 54px rgba(3, 13, 30, 0.28);
-  margin-bottom: 18px;
+  background: linear-gradient(135deg, var(--ebank-primary) 0%, #003a70 100%);
+  border-radius: var(--ebank-radius-xl);
+  padding: 36px 40px;
+  box-shadow: var(--ebank-shadow);
+  margin-bottom: 24px;
 }
 
-#evibank-header::before {
+#evibank-header::after {
   content: "";
   position: absolute;
-  right: -30px;
-  top: -30px;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(106, 153, 255, 0.20) 0%, transparent 70%);
+  right: -50px;
+  bottom: -50px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
   pointer-events: none;
 }
 
 #evibank-header h1 {
   margin: 0;
-  color: #b8d1ff;
-  font-size: 34px;
-  font-weight: 900;
-  letter-spacing: 0.2px;
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 #evibank-header p {
-  margin: 12px 0 0 0;
-  color: rgba(232, 241, 255, 0.90);
+  margin: 10px 0 0 0;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 15px;
-  line-height: 1.72;
-  max-width: 980px;
+  line-height: 1.6;
 }
 
 #evibank-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .evibank-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(33, 91, 210, 0.16);
-  color: #cfe0ff;
-  border: 1px solid rgba(122, 165, 255, 0.18);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* =========================================
-   4. Panel / Card
+   4. Panels & Cards 
    ========================================= */
 .evibank-panel {
   position: relative;
-  background: linear-gradient(180deg, var(--ebank-card) 0%, var(--ebank-card-2) 100%) !important;
+  background: var(--ebank-card) !important;
   border: 1px solid var(--ebank-border) !important;
   border-radius: var(--ebank-radius-xl) !important;
-  padding: 18px !important;
+  padding: 24px !important;
   box-shadow: var(--ebank-shadow-soft) !important;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: auto; /* 修复大片留白：不再强制拉伸高度 */
+  flex-grow: 0;
+}
+
+#chat-panel {
+  height: 100%; /* 仅保留左侧主对话框的自适应拉伸 */
+}
+
+/* --- 修复 Issue 3: 消除 HTML/Markdown 组件的奇怪局布滚动条 --- */
+.evibank-panel .prose,
+.evibank-panel-title,
+.evibank-panel-title h3,
+.evibank-panel-title p {
+  overflow: hidden !important; 
+  white-space: normal !important;
 }
 
 .evibank-panel-title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .evibank-panel-title h3 {
-  margin: 0;
+  margin: 0 0 6px 0;
   color: var(--ebank-text);
   font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.1px;
+  font-weight: 700;
 }
 
 .evibank-panel-title p {
   margin: 0;
   color: var(--ebank-text-soft);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .evibank-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--ebank-border), transparent);
-  margin: 8px 0 6px 0;
+  background: var(--ebank-border);
+  margin: 16px 0;
 }
 
 /* =========================================
-   5. Chat Panel
+   5. Chatbox & Input
    ========================================= */
-#chat-panel {
-  min-height: 760px;
-}
-
 #chatbot-box {
   border: 1px solid var(--ebank-border) !important;
-  border-radius: 20px !important;
-  overflow: hidden !important;
-  background: var(--ebank-card) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-#chatbot-box > .wrap,
-#chatbot-box .wrap,
-#chatbot-box .panel-wrap {
-  padding: 14px !important;
-  background: transparent !important;
-}
-
-#chatbot-box .message,
-#chatbot-box .message-wrap,
-#chatbot-box .message-row {
-  background: transparent !important;
+  border-radius: var(--ebank-radius-lg) !important;
+  background: var(--ebank-bg-soft) !important;
+  flex-grow: 1;
+  min-height: 480px;
 }
 
 #chatbot-box .message-content {
-  border-radius: 18px !important;
-  line-height: 1.78 !important;
+  border-radius: 14px !important;
+  line-height: 1.7 !important;
   font-size: 14px !important;
-  padding: 16px 18px !important;
-  animation: evibankFadeUp 0.22s ease both;
-  box-sizing: border-box !important;
+  padding: 14px 20px !important;
 }
 
+/* --- 修复 Issue 1: 强制覆盖用户气泡内深层标签的字体颜色 --- */
 #chatbot-box .message.user .message-content,
-#chatbot-box .message[data-testid="chatbot-message-user"] .message-content {
+#chatbot-box .message.user .message-content *,
+#chatbot-box .message[data-testid="chatbot-message-user"] .message-content,
+#chatbot-box .message[data-testid="chatbot-message-user"] .message-content * {
   background: var(--ebank-user-bubble-bg) !important;
   color: var(--ebank-user-bubble-text) !important;
   border: none !important;
-  box-shadow: 0 10px 22px rgba(31, 94, 255, 0.16);
 }
 
 #chatbot-box .message.bot .message-content,
-#chatbot-box .message.assistant .message-content,
+#chatbot-box .message.bot .message-content *,
 #chatbot-box .message[data-testid="chatbot-message-bot"] .message-content,
-#chatbot-box .message[data-testid="chatbot-message-assistant"] .message-content {
-  background: var(--ebank-bot-bubble-bg) !important;
+#chatbot-box .message[data-testid="chatbot-message-bot"] .message-content * {
+  background: var(--ebank-card) !important;
   color: var(--ebank-text) !important;
-  border: 1px solid var(--ebank-bot-bubble-border) !important;
-  box-shadow: none !important;
-}
-
-#chatbot-box button[aria-label*="copy"],
-#chatbot-box button[title*="copy"],
-#chatbot-box button[aria-label*="复制"],
-#chatbot-box button[title*="复制"] {
-  opacity: 0.72;
+  border-color: var(--ebank-bot-bubble-border) !important;
 }
 
 #query-box textarea,
-#query-box input,
-#query-box .wrap textarea,
-#query-box .wrap input {
+#query-box input {
   background: var(--ebank-card) !important;
-  color: var(--ebank-text) !important;
   border: 1px solid var(--ebank-border-strong) !important;
-  border-radius: 18px !important;
-  box-shadow: none !important;
-  font-size: 14px !important;
-  padding: 12px 14px !important;
+  border-radius: var(--ebank-radius-md) !important;
+  padding: 14px 16px !important;
 }
 
-#query-box textarea:focus,
-#query-box input:focus {
-  border-color: rgba(31, 94, 255, 0.55) !important;
-  box-shadow: 0 0 0 4px rgba(31, 94, 255, 0.10) !important;
-}
-
-#send-btn button,
-#clear-btn button,
-.example-chip button {
-  border-radius: 14px !important;
-  font-weight: 700 !important;
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease !important;
-}
-
-#send-btn button:hover,
-#clear-btn button:hover,
-.example-chip button:hover {
-  transform: translateY(-1px);
+#query-box textarea:focus {
+  border-color: var(--ebank-primary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.15) !important;
 }
 
 #send-btn button {
-  background: linear-gradient(135deg, var(--ebank-primary), var(--ebank-primary-2)) !important;
+  background: var(--ebank-primary) !important;
   color: white !important;
-  border: none !important;
-  box-shadow: 0 10px 24px rgba(31, 94, 255, 0.22) !important;
+  border-radius: var(--ebank-radius-md) !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
 }
 
-#clear-btn button {
-  background: transparent !important;
-  color: var(--ebank-text) !important;
-  border: 1px solid var(--ebank-border-strong) !important;
+#send-btn button:hover {
+  background: var(--ebank-primary-hover) !important;
 }
 
-#examples-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 2px;
-}
-
-.example-chip button {
+/* =========================================
+   6. Examples Grid
+   ========================================= */
+.examples-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
   width: 100% !important;
-  min-height: 54px !important;
-  background: var(--ebank-card) !important;
-  color: var(--ebank-text) !important;
-  border: 1px solid var(--ebank-border) !important;
-  box-shadow: none !important;
-  text-align: left !important;
-  line-height: 1.48 !important;
-  padding: 10px 14px !important;
-  white-space: normal !important;
 }
 
-.example-chip button:hover {
-  border-color: rgba(31, 94, 255, 0.42) !important;
-  box-shadow: 0 8px 16px rgba(31, 94, 255, 0.08) !important;
+.examples-grid .example-chip button {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 56px !important;
+  background: var(--ebank-card) !important;
+  color: var(--ebank-text-soft) !important;
+  border: 1px solid var(--ebank-border) !important;
+  border-radius: var(--ebank-radius-md) !important;
+  text-align: left !important;
+  padding: 12px 16px !important;
+  white-space: normal !important;
+  transition: all 0.2s ease !important;
+}
+
+.examples-grid .example-chip button:hover {
+  border-color: var(--ebank-primary) !important;
+  color: var(--ebank-primary) !important;
+  background: var(--ebank-bg-soft) !important;
 }
 
 .evibank-footnote {
   color: var(--ebank-text-faint);
   font-size: 12px;
-  line-height: 1.62;
-  margin-top: 4px;
+  line-height: 1.6;
+  margin-top: 12px;
+  padding-left: 4px;
 }
 
 /* =========================================
-   6. Right Stack / Summary / Gallery
+   7. Right Column Elements
    ========================================= */
-#right-stack {
-  position: relative;
-  min-height: 760px;
-}
-
-#gallery-box {
-  min-height: 330px;
-}
-
-#gallery-box .thumbnail-item,
-#gallery-box .gallery-item,
-#gallery-box [data-testid="gallery"] button {
-  border-radius: 14px !important;
-}
-
-#gallery-box .wrap {
-  padding: 6px 2px 0 2px !important;
-}
-
-#gallery-box img {
-  border-radius: 14px !important;
-  background: var(--ebank-card) !important;
-}
-
-#summary-box .prose,
-#summary-box .markdown,
 #summary-box {
-  line-height: 1.78 !important;
-  color: var(--ebank-text) !important;
-}
-
-#summary-box p,
-#summary-box li,
-#summary-box strong,
-#summary-box h1,
-#summary-box h2,
-#summary-box h3,
-#summary-box h4 {
-  color: var(--ebank-text) !important;
+  background: var(--ebank-bg-soft) !important;
+  border: 1px solid var(--ebank-border) !important;
+  border-radius: var(--ebank-radius-md) !important;
+  padding: 16px 20px !important;
+  overflow: hidden !important; /* 隐藏内部滚动条 */
 }
 
 #summary-box .prose,
-#summary-box .markdown-body,
-#summary-box .wrap {
-  padding: 2px 4px 2px 2px !important;
+#summary-box .markdown-body {
+  color: var(--ebank-text) !important;
+  line-height: 1.7 !important;
+}
+
+#gallery-box .gallery-item {
+  border-radius: var(--ebank-radius-md) !important;
+  border: 1px solid var(--ebank-border) !important;
+}
+
+/* --- 修复 Issue 4: JSON 组件的双滚动条 --- */
+#debug-box > div.wrap,
+#debug-box > div > div.wrap {
+  overflow: hidden !important; 
 }
 
 /* =========================================
-   7. Evidence Table (Full Width)
+   8. Evidence Table 
    ========================================= */
-#evidence-table-wrap .wrap {
+#evidence-table-wrap {
   border: 1px solid var(--ebank-border) !important;
-  border-radius: 18px !important;
-  overflow: hidden !important;
+  border-radius: var(--ebank-radius-md) !important;
   background: var(--ebank-card) !important;
+  overflow: hidden !important;
 }
 
-#evidence-table-wrap table,
-#evidence-table-wrap thead,
-#evidence-table-wrap tbody,
-#evidence-table-wrap tr,
-#evidence-table-wrap th,
+#evidence-table-wrap table {
+  margin: 0 !important;
+}
+
+#evidence-table-wrap th, 
 #evidence-table-wrap td {
-  background: var(--ebank-card) !important;
-  color: var(--ebank-text) !important;
+  padding: 14px 16px !important;
   border-color: var(--ebank-border) !important;
   font-size: 13px !important;
+  color: var(--ebank-text) !important;
+  background: var(--ebank-card) !important;
 }
 
 #evidence-table-wrap th {
   background: var(--ebank-bg-soft) !important;
-  font-weight: 700 !important;
-}
-
-#evidence-table-wrap td,
-#evidence-table-wrap th {
-  padding: 10px 12px !important;
-}
-
-/* =========================================
-   8. Processing Overlay
-   ========================================= */
-#processing-left,
-#processing-right {
-  position: absolute;
-  inset: 0;
-  z-index: 15;
-  pointer-events: none;
-}
-
-.evibank-processing-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: 24px;
-  background:
-    linear-gradient(90deg, rgba(31, 94, 255, 0.00), rgba(31, 94, 255, 0.08), rgba(31, 94, 255, 0.00)),
-    rgba(17, 27, 42, 0.08);
-  overflow: hidden;
-  animation: evibankOverlayFade 0.16s ease both;
-}
-
-.dark .evibank-processing-overlay,
-body.dark .evibank-processing-overlay,
-[data-theme="dark"] .evibank-processing-overlay {
-  background:
-    linear-gradient(90deg, rgba(122, 166, 255, 0.00), rgba(122, 166, 255, 0.10), rgba(122, 166, 255, 0.00)),
-    rgba(5, 10, 18, 0.18);
-}
-
-.evibank-processing-overlay::before {
-  content: "";
-  position: absolute;
-  left: -36%;
-  top: 0;
-  width: 36%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,0.0) 0%,
-    rgba(255,255,255,0.18) 50%,
-    rgba(255,255,255,0.0) 100%
-  );
-  animation: evibankShimmer 1.4s linear infinite;
-}
-
-.evibank-processing-chip {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(13, 22, 34, 0.84);
-  color: #ecf4ff;
-  border: 1px solid rgba(121, 158, 255, 0.18);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.24);
-}
-
-.evibank-processing-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #81adff;
-  box-shadow: 0 0 0 0 rgba(129, 173, 255, 0.72);
-  animation: evibankPulse 1.35s ease infinite;
-}
-
-.evibank-processing-text {
-  color: #eef5ff;
-}
-
-.evibank-processing-elapsed {
-  color: #bcd3ff;
-  font-variant-numeric: tabular-nums;
+  color: var(--ebank-text-soft) !important;
+  font-weight: 600 !important;
 }
 
 /* =========================================
    9. Footer
    ========================================= */
 #evibank-footer {
-  margin-top: 20px;
+  margin-top: 24px;
+  padding: 20px 24px;
+  border-radius: var(--ebank-radius-lg);
+  background: var(--ebank-card);
   border: 1px solid var(--ebank-border);
-  border-radius: 18px;
-  background: linear-gradient(180deg, var(--ebank-card) 0%, var(--ebank-card-2) 100%);
-  box-shadow: var(--ebank-shadow-soft);
-  padding: 14px 18px;
-}
-
-#evibank-footer-inner {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-}
-
-#evibank-footer-left {
-  display: flex;
   align-items: center;
-  gap: 10px;
   color: var(--ebank-text-soft);
   font-size: 13px;
-}
-
-#evibank-footer-left strong {
-  color: var(--ebank-text);
 }
 
 #evibank-footer a {
   color: var(--ebank-primary);
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 #evibank-footer a:hover {
   text-decoration: underline;
 }
 
-/* =========================================
-   10. Gradio Footer / Settings
-   ========================================= */
-footer,
-.gradio-container footer {
-  display: flex !important;
-  opacity: 0.92;
-  padding-top: 8px !important;
-}
-
-footer a,
-footer button {
-  color: var(--ebank-text-soft) !important;
-}
-
-/* =========================================
-   11. Animations
-   ========================================= */
-@keyframes evibankShimmer {
-  0% { left: -36%; }
-  100% { left: 136%; }
-}
-
-@keyframes evibankPulse {
-  0% { box-shadow: 0 0 0 0 rgba(129, 173, 255, 0.72); }
-  70% { box-shadow: 0 0 0 8px rgba(129, 173, 255, 0.0); }
-  100% { box-shadow: 0 0 0 0 rgba(129, 173, 255, 0.0); }
-}
-
-@keyframes evibankFadeUp {
-  from {
-    opacity: 0.0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1.0;
-    transform: translateY(0);
-  }
-}
-
-@keyframes evibankOverlayFade {
-  from {
-    opacity: 0.0;
-  }
-  to {
-    opacity: 1.0;
-  }
-}
-
-/* =========================================
-   12. Responsive
-   ========================================= */
-@media (max-width: 1280px) {
-  .gradio-container {
-    padding: 16px !important;
-  }
-
-  #evibank-header h1 {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 980px) {
-  #evibank-header {
-    padding: 22px 18px 18px 18px;
-  }
-
-  #evibank-header h1 {
-    font-size: 24px;
-  }
-
-  #chat-panel,
-  #right-stack {
-    min-height: auto;
-  }
-
-  .evibank-panel {
-    padding: 15px !important;
-  }
+footer.svelte-1rjryqp {
+  display: none !important;
 }
 """
 
@@ -773,7 +521,7 @@ def _build_evidence_dataframe(answer: ChatAnswer) -> pd.DataFrame:
                 _normalize_text(item.source_type),
                 _normalize_text(item.category) or "未分类",
                 _format_location(item),
-                round(_safe_float(item.score, 0.0), 6),
+                round(_safe_float(item.score, 6)),
                 _normalize_text(item.reason),
                 ]
         )
@@ -846,11 +594,6 @@ def _panel_title_html(title: str, subtitle: str = "") -> str:
 
 
 def _iter_markdown_frames(text: str) -> list[str]:
-    """
-    尽量平滑地分段输出答案：
-    1. 先按空行分块
-    2. 再对较长段落做细切
-    """
     full_text = _normalize_text(text)
     if not full_text:
         return [""]
@@ -894,18 +637,6 @@ def _iter_markdown_frames(text: str) -> list[str]:
         prev = frame
 
     return deduped
-
-
-def _processing_overlay_html(scope_text: str, elapsed_seconds: float) -> str:
-    return f"""
-    <div class="evibank-processing-overlay">
-      <div class="evibank-processing-chip">
-        <span class="evibank-processing-dot"></span>
-        <span class="evibank-processing-text">{escape(scope_text)}</span>
-        <span class="evibank-processing-elapsed">{elapsed_seconds:.1f}s</span>
-      </div>
-    </div>
-    """
 
 
 @lru_cache(maxsize=1)
@@ -976,8 +707,6 @@ def _handle_chat_stream(
         pd.DataFrame,
         list[tuple[str, str | None]],
         dict[str, Any],
-        str,
-        str,
     ],
     None,
     None,
@@ -994,12 +723,7 @@ def _handle_chat_stream(
             DEFAULT_EVIDENCE_SUMMARY,
             _empty_evidence_dataframe(),
             [],
-            {
-                "status": "warning",
-                "message": "empty_query",
-            },
-            "",
-            "",
+            {"status": "warning", "message": "empty_query"},
         )
         return
 
@@ -1014,7 +738,6 @@ def _handle_chat_stream(
     start_time = time.perf_counter()
     future = EXECUTOR.submit(service.chat, clean_query, history)
 
-    # 在后台执行 chat() 时，持续刷新处理中遮罩与计时器
     while not future.done():
         elapsed = time.perf_counter() - start_time
         yield (
@@ -1030,8 +753,6 @@ def _handle_chat_stream(
                 "query": clean_query,
                 "elapsed_seconds": round(elapsed, 2),
             },
-            _processing_overlay_html("正在检索与生成", elapsed),
-            _processing_overlay_html("正在整理证据与图示", elapsed),
         )
         time.sleep(0.12)
 
@@ -1049,16 +770,12 @@ def _handle_chat_stream(
 
         frames = _iter_markdown_frames(final_answer_markdown)
 
-        # 开始逐段展示答案。此阶段也保留轻量遮罩，直到最后一帧再去掉。
         for idx, frame in enumerate(frames):
             streamed_history = [
                 *history,
                 user_message,
                 {"role": "assistant", "content": frame},
             ]
-
-            keep_overlay = idx < len(frames) - 1
-            current_elapsed = time.perf_counter() - start_time
 
             yield (
                 streamed_history,
@@ -1068,11 +785,9 @@ def _handle_chat_stream(
                 evidence_df,
                 gallery_items,
                 debug_info,
-                _processing_overlay_html("正在渲染回答", current_elapsed) if keep_overlay else "",
-                _processing_overlay_html("正在同步证据", current_elapsed) if keep_overlay else "",
             )
 
-            if keep_overlay:
+            if idx < len(frames) - 1:
                 time.sleep(0.03)
 
     except Exception as exc:
@@ -1109,8 +824,6 @@ def _handle_chat_stream(
             _empty_evidence_dataframe(),
             [],
             debug_info,
-            "",
-            "",
         )
 
 
@@ -1122,8 +835,6 @@ def _clear_all() -> tuple[
     pd.DataFrame,
     list[tuple[str, str | None]],
     dict[str, Any],
-    str,
-    str,
 ]:
     empty_history: list[dict[str, str]] = []
     return (
@@ -1134,8 +845,6 @@ def _clear_all() -> tuple[
         _empty_evidence_dataframe(),
         [],
         DEFAULT_DEBUG_INFO,
-        "",
-        "",
     )
 
 
@@ -1168,16 +877,13 @@ def build_demo() -> gr.Blocks:
 
     footer_html = f"""
     <div id="evibank-footer">
-      <div id="evibank-footer-inner">
-        <div id="evibank-footer-left">
-          <span style="font-size:16px;">⭐</span>
-          <span><strong>{escape(PROJECT_BRAND_NAME)}</strong> · 企业网银 FAQ 证据增强问答演示</span>
-        </div>
-        <div id="evibank-footer-right">
-          <a href="{escape(GITHUB_REPO_URL)}" target="_blank" rel="noopener noreferrer">
-            GitHub · {escape(GITHUB_REPO_NAME)}
-          </a>
-        </div>
+      <div>
+        <span>⭐ <strong>{escape(PROJECT_BRAND_NAME)}</strong> · 企业网银 FAQ 证据增强问答演示</span>
+      </div>
+      <div>
+        <a href="{escape(GITHUB_REPO_URL)}" target="_blank" rel="noopener noreferrer">
+          GitHub · {escape(GITHUB_REPO_NAME)}
+        </a>
       </div>
     </div>
     """
@@ -1202,7 +908,8 @@ def build_demo() -> gr.Blocks:
         )
 
         with gr.Row(equal_height=False, elem_id="evibank-main-row"):
-            with gr.Column(scale=7, min_width=760, elem_classes=["evibank-column"]):
+
+            with gr.Column(scale=7, min_width=600, elem_classes=["evibank-column"]):
                 with gr.Group(elem_classes=["evibank-panel"], elem_id="chat-panel"):
                     gr.HTML(
                         _panel_title_html(
@@ -1214,7 +921,6 @@ def build_demo() -> gr.Blocks:
                     chatbot = gr.Chatbot(
                         value=[],
                         type="messages",
-                        height=560,
                         show_copy_button=False,
                         bubble_full_width=False,
                         placeholder="请输入企业网银相关问题，例如登录、UKey、证书、回单、转账、代发、权限等。",
@@ -1235,18 +941,8 @@ def build_demo() -> gr.Blocks:
                     )
 
                     with gr.Row():
-                        send_btn = gr.Button(
-                            "发送",
-                            variant="primary",
-                            size="lg",
-                            elem_id="send-btn",
-                        )
-                        clear_btn = gr.Button(
-                            "清空历史",
-                            variant="secondary",
-                            size="lg",
-                            elem_id="clear-btn",
-                        )
+                        send_btn = gr.Button("发送", variant="primary", size="lg", elem_id="send-btn")
+                        clear_btn = gr.Button("清空历史", variant="secondary", size="lg")
 
                     gr.HTML(
                         _panel_title_html(
@@ -1255,68 +951,60 @@ def build_demo() -> gr.Blocks:
                         )
                     )
 
-                    with gr.Column(elem_id="examples-wrap"):
-                        row_size = 2 if len(example_questions) <= 4 else 3
-                        for i in range(0, len(example_questions), row_size):
-                            with gr.Row():
-                                for example in example_questions[i : i + row_size]:
-                                    example_btn = gr.Button(
-                                        value=example,
-                                        variant="secondary",
-                                        size="sm",
-                                        elem_classes=["example-chip"],
-                                    )
-                                    example_btn.click(
-                                        fn=_fill_example,
-                                        inputs=gr.State(example),
-                                        outputs=query_box,
-                                    )
+                    with gr.Column(elem_classes=["examples-grid"]):
+                        for example in example_questions:
+                            example_btn = gr.Button(
+                                value=example,
+                                variant="secondary",
+                                elem_classes=["example-chip"],
+                            )
+                            example_btn.click(
+                                fn=_fill_example,
+                                inputs=gr.State(example),
+                                outputs=query_box,
+                            )
 
                     gr.Markdown(
                         "提示：答案正文下方会显式补充“来源依据”；右侧展示图文辅助信息，底部证据表汇总命中结果与分数，适合会议演示时快速核对。",
                         elem_classes=["evibank-footnote"],
                     )
 
-                    processing_left = gr.HTML("", elem_id="processing-left")
+            # 解耦了右侧结构，废除了无意义的外层全局嵌套 Panel，解决底部巨幅留白问题
+            with gr.Column(scale=5, min_width=480, elem_classes=["evibank-column"]):
+                with gr.Group(elem_classes=["evibank-panel"], elem_id="gallery-box"):
+                    gr.HTML(
+                        _panel_title_html(
+                            "相关截图",
+                            "若命中的知识条目包含图文说明，将优先在此展示辅助截图。",
+                        )
+                    )
+                    # 去除了固定 height 约束，以实现内容高度自适应
+                    gallery = gr.Gallery(
+                        value=[],
+                        show_label=False,
+                        columns=2,
+                        preview=True,
+                        object_fit="contain",
+                    )
 
-            with gr.Column(scale=5, min_width=520, elem_classes=["evibank-column"]):
-                with gr.Group(elem_classes=["evibank-panel"], elem_id="right-stack"):
-                    with gr.Group(elem_classes=["evibank-panel"], elem_id="gallery-box"):
-                        gr.HTML(
-                            _panel_title_html(
-                                "相关截图",
-                                "若命中的知识条目包含图文说明，将优先在此展示辅助截图。",
-                            )
+                with gr.Group(elem_classes=["evibank-panel"]):
+                    gr.HTML(
+                        _panel_title_html(
+                            "证据摘要",
+                            "展示当前回答最重要的命中依据、来源与得分。",
                         )
-                        gallery = gr.Gallery(
-                            value=[],
-                            show_label=False,
-                            columns=2,
-                            height=300,
-                            preview=True,
-                            object_fit="contain",
-                        )
+                    )
+                    evidence_summary = gr.Markdown(
+                        value=DEFAULT_EVIDENCE_SUMMARY,
+                        show_label=False,
+                        elem_id="summary-box",
+                    )
 
-                    with gr.Group(elem_classes=["evibank-panel"]):
-                        gr.HTML(
-                            _panel_title_html(
-                                "证据摘要",
-                                "展示当前回答最重要的命中依据、来源与得分。",
-                            )
-                        )
-                        evidence_summary = gr.Markdown(
-                            value=DEFAULT_EVIDENCE_SUMMARY,
-                            show_label=False,
-                            elem_id="summary-box",
-                        )
-
-                    with gr.Accordion("调试信息", open=False, elem_id="debug-box"):
-                        debug_json = gr.JSON(
-                            value=DEFAULT_DEBUG_INFO,
-                            show_label=False,
-                        )
-
-                    processing_right = gr.HTML("", elem_id="processing-right")
+                with gr.Accordion("调试信息", open=False, elem_id="debug-box"):
+                    debug_json = gr.JSON(
+                        value=DEFAULT_DEBUG_INFO,
+                        show_label=False,
+                    )
 
         with gr.Row(equal_height=False, elem_id="evibank-bottom-row"):
             with gr.Column(scale=1):
@@ -1348,8 +1036,6 @@ def build_demo() -> gr.Blocks:
             evidence_table,
             gallery,
             debug_json,
-            processing_left,
-            processing_right,
         ]
 
         send_btn.click(

@@ -1,15 +1,22 @@
 # EviBank-RAG 发布版使用说明
 
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12+-blue.svg">  <img alt="Gradio" src="https://img.shields.io/badge/UI-Gradio-orange.svg">  <img alt="Vector DB" src="https://img.shields.io/badge/VectorDB-Chroma-brightgreen.svg">  <img alt="LLM" src="https://img.shields.io/badge/LLM-Qwen3.5--Flash-purple.svg">  <img alt="Embedding" src="https://img.shields.io/badge/Embedding-text--embedding--v4-red.svg">  <img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey.svg">
+</p>
+
 ## 一、项目简介
+
+#### **项目主页：**[GitHub](https://github.com/skmcwd/EviBank-RAG)
+
+#### 版本：release_v1.0
 
 EviBank-RAG 是一个面向企业网银常见问题场景的问答演示系统。  
 系统基于本地知识库与云端大模型接口实现问答能力，并支持展示命中证据、图文说明及相关截图。
 
 本发布版本适合少量内部人员使用，支持：
 
-1. 修改 `.env.example`为`.env`，并填入其中的API
-   Key。获取阿里云百炼API: [链接](https://help.aliyun.com/zh/model-studio/get-api-key)；
-2. (可选)替换 `data\raw` 中的原始知识文件；
+1. 修改 `.env.example`为`.env`，并填入其中的API Key；
+2. **(可选)**替换 `data\raw` 中的原始知识文件；
 3. 一键重建知识库与索引；
 4. 启动本地问答服务并在浏览器中使用。默认启动ssh映射，可供远程访问。
 
@@ -65,7 +72,7 @@ release
    ```
 
    注意：
-    - `DASHSCOPE_API_KEY` 必须填写为可用的阿里云百炼 API Key。
+    - `DASHSCOPE_API_KEY` 必须填写为可用的阿里云百炼 API Key。**获取阿里云百炼API: [链接](https://help.aliyun.com/zh/model-studio/get-api-key)**。
     - `DASHSCOPE_BASE_URL` 必须保持为纯 URL，不要写成 Markdown 链接格式。
 3. 重命名`.env.example`为`.env`。
 4. 确认 `config\settings.yaml` 存在。
@@ -143,7 +150,7 @@ data\raw\
     - 若浏览器未自动打开，可能是ssh映射网络不畅，请先手动访问本地链接，待网络环境好转后再试：
       ```
       http://127.0.0.1:7860
-      ```  
+      ```
     - 若仍无法访问，请查看 `logs` 目录中的日志文件。
 
 2. **启动时报错“未找到 config/settings.yaml”怎么办？**
@@ -187,9 +194,11 @@ data\raw\
 
 如需更新功能、修复问题或重新打包，请提交issue。
 
-## 十、(附加内容,面向源码使用者)自行打包说明<a id="section1"></a>
+-----
 
-**说明**：  
+## 十、附加内容：自行打包说明<a id="section1"></a>
+
+
 由于 `EviBank-RAG\` 与 `EviBank-RAG-Rebuild\` 目录中包含较多打包生成文件，不适合完整提交到 GitHub 仓库中。因此，仓库中通常仅保留源码、配置文件、
 `.spec` 文件及必要脚本；如需获得可执行程序，使用者可以根据以下步骤自行打包。
 
@@ -393,14 +402,14 @@ release
    **原因**：
     - 程序运行目录缺少 `config\settings.yaml`；
     - 或 release 目录结构不完整。  
-      **处理方法**：
+   **处理方法**：
     - 确认 `config\` 目录位于 release 根目录；
     - 不要只复制 exe 文件单独运行。
 
 2. **启动时报缺少 `gradio_client/types.json` 或 `safehttpx/version.txt`**  
    **原因**：
     - 依赖资源文件未被正确收集到打包产物中。  
-      **处理方法**：
+   **处理方法**：
     - 请优先使用仓库自带的 `.spec` 文件重新打包；
     - 不建议改用临时、简化的 pyinstaller 命令；
     - 若问题仍存在，请检查 `.spec` 文件与 hooks 是否完整。
@@ -409,14 +418,14 @@ release
    **原因**：
     - 打包环境未正确包含 `scripts` 包；
     - 或使用了不完整的打包配置。  
-      **处理方法**：
+   **处理方法**：
     - 请确认使用的是项目根目录下提供的 `EviBank-RAG-Rebuild.spec`；
     - 请不要自行省略 `.spec` 中的依赖收集配置。
 
 4. **修改了 `data\raw` 后，系统内容没有变化**  
    **原因**：
     - 修改原始文件后未重新运行 Builder。  
-      **处理方法**：
+   **处理方法**：
     - 运行 `release\EviBank-RAG-Rebuild\EviBank-RAG-Rebuild.exe`；
     - 或双击“重建知识库.bat”。
 

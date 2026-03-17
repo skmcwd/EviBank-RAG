@@ -245,7 +245,11 @@ ebank_rag_demo/
 
 ## 快速开始
 
-> 代码详细介绍见[Intro.md](Intro.md)
+> 代码详解见**[详细介绍](Intro.md)**
+> 
+> 一键部署版见**[发布版文档](https://github.com/skmcwd/EviBank-RAG/tree/main/release)**
+> 
+> 发布版下载: **[链接](https://github.com/skmcwd/EviBank-RAG/releases)**
 
 ### 1. 克隆仓库
 

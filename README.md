@@ -290,31 +290,49 @@ data/raw/
 
 ## 数据构建流程
 
-### Step 1：解析 Excel FAQ
+### A方案：一键搭建知识库
+
+运行：`scripts/rebuild_all.py`
+
+```
+python scripts/rebuild_all.py
+```
+
+它顺序执行：
+
+1. 解析 Excel
+2. 解析 PPT
+3. 解析 DOCX
+4. 合并 `kb.jsonl`
+5. 重建 Chroma 和 BM25
+
+### B方案：一步一步构建知识库
+
+#### Step 1：解析 Excel FAQ
 
 ```bash
 python scripts/parse_excel_faq.py --input data/raw/企业网银常见问题.xlsx --output data/parsed/excel_kb.jsonl
 ```
 
-### Step 2：解析 PPT 图文知识
+#### Step 2：解析 PPT 图文知识
 
 ```bash
 python scripts/parse_ppt_kb.py --input data/raw/企业网银问题带图.pptx --output data/parsed/ppt_kb.jsonl
 ```
 
-### Step 3：解析 Word 手册
+#### Step 3：解析 Word 手册
 
 ```bash
 python scripts/parse_docx_manual.py --input data/raw/操作手册-如何网银代发工资.docx --output data/parsed/docx_kb.jsonl
 ```
 
-### Step 4：合并知识库
+#### Step 4：合并知识库
 
 ```bash
 python scripts/build_kb.py --inputs data/parsed/excel_kb.jsonl data/parsed/ppt_kb.jsonl data/parsed/docx_kb.jsonl --output data/parsed/kb.jsonl
 ```
 
-### Step 5：构建索引
+#### Step 5：构建索引
 
 ```bash
 python scripts/build_indexes.py --input data/parsed/kb.jsonl --rebuild
@@ -376,16 +394,17 @@ python scripts/smoke_test.py
 
 ![image-20260317182050178](assets/ui_light.png)
 
-<p align="center">Light UI
+<p align="center">
+Light UI
 </p>
 
-![ui_dark](assets\ui_dark.png)
+![ui_dark](assets/ui_dark.png)
 
 <p align="center">
 Dark UI
 </p>
 
-![eviAbs_debug](assets\eviAbs_debug.png)
+![eviAbs_debug](assets/eviAbs_debug.png)
 
 <p align="center">
 Evidence Abstract & Debug Interface

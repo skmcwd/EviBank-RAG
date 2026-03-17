@@ -20,7 +20,9 @@ from app.services.chat_service import ChatService
 setup_logging("INFO")
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+from app.runtime import get_runtime_root
+PROJECT_ROOT = get_runtime_root()
 
 # GitHub 仓库配置
 GITHUB_REPO_URL = "https://github.com/skmcwd/EviBank-RAG"
@@ -523,7 +525,7 @@ def _build_evidence_dataframe(answer: ChatAnswer) -> pd.DataFrame:
                 _format_location(item),
                 round(_safe_float(item.score, 6)),
                 _normalize_text(item.reason),
-                ]
+            ]
         )
 
     if not rows:
@@ -908,7 +910,6 @@ def build_demo() -> gr.Blocks:
         )
 
         with gr.Row(equal_height=False, elem_id="evibank-main-row"):
-
             with gr.Column(scale=7, min_width=600, elem_classes=["evibank-column"]):
                 with gr.Group(elem_classes=["evibank-panel"], elem_id="chat-panel"):
                     gr.HTML(

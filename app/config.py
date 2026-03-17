@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from app.runtime import get_runtime_root
 
 
 class AppConfigError(RuntimeError):
@@ -156,7 +157,8 @@ def _project_root() -> Path:
     └─ app/
        └─ config.py
     """
-    return Path(__file__).resolve().parent.parent
+    # return Path(__file__).resolve().parent.parent
+    return get_runtime_root()
 
 
 def _build_paths(project_root: Path) -> PathConfig:

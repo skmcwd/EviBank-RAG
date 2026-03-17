@@ -13,7 +13,11 @@ from pydantic import ValidationError
 
 # 兼容直接执行：
 # python scripts/parse_excel_faq.py --input ... --output ...
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from app.runtime import get_runtime_root
+
+PROJECT_ROOT = get_runtime_root()
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -21,7 +25,6 @@ from app.logging_utils import setup_logging  # noqa: E402
 from app.models import KBChunk  # noqa: E402
 
 import logging
-
 
 logger = logging.getLogger(__name__)
 

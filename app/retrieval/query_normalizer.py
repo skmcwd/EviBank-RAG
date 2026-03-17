@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Pattern, TypedDict
 
 from app.config import get_settings
+from app.runtime import get_runtime_root
 
 logger = logging.getLogger(__name__)
 
@@ -358,7 +359,7 @@ def _get_default_synonyms_path() -> Path:
     try:
         return get_settings().paths.synonyms_file
     except Exception:
-        return Path(__file__).resolve().parent.parent.parent / "config" / "synonyms.json"
+        return get_runtime_root() / "config" / "synonyms.json"
 
 
 @lru_cache(maxsize=1)

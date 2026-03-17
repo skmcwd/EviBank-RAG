@@ -8,7 +8,11 @@ from typing import Any
 
 # 兼容直接执行：
 # python scripts/smoke_test.py
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from app.runtime import get_runtime_root
+
+PROJECT_ROOT = get_runtime_root()
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -69,7 +73,7 @@ def _build_answer_summary(answer_markdown: str, max_chars: int = 220) -> str:
     markers = ["一、结论", "二、操作步骤", "三、补充说明"]
     start = text.find(markers[0])
     if start >= 0:
-        text = text[start + len(markers[0]) :].strip()
+        text = text[start + len(markers[0]):].strip()
 
     for marker in markers[1:]:
         pos = text.find(marker)
